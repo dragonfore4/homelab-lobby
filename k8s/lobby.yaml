@@ -106,6 +106,7 @@ metadata:
     gethomepage.dev/name: Lobby
     gethomepage.dev/group: Applications
     gethomepage.dev/icon: mdi-home
+    gethomepage.dev/pod-selector: app=lobby
 spec:
   ingressClassName: traefik
   rules:
