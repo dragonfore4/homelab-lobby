@@ -53,7 +53,7 @@ spec:
       serviceAccountName: lobby        # ★ ลืมบรรทัดนี้ → ใช้ SA default → 403
       containers:
         - name: lobby
-          image: ghcr.io/dragonfore4/lobby:sha-e707b62
+          image: ghcr.io/dragonfore4/lobby:sha-latest
           ports:
             - containerPort: 3000
           # ★ resource requests — บทเรียนจาก incident §17
