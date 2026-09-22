@@ -64,7 +64,7 @@ jobs:
           SHORT_SHA="sha-${{ steps.meta.outputs.version }}"
           
           # เปลี่ยน tag ใน Deployment (สมมติไฟล์ชื่อ k8s/deployment.yaml)
-          sed -i -E "s|(image: ghcr.io/${{ github.repository_owner }}/lobby:).*|\1${SHORT_SHA}|" k8s/deployment.yaml
+          sed -i -E "s|(image: ghcr.io/${{ github.repository_owner }}/lobby:).*|\1${SHORT_SHA}|" k8s/lobby.yaml
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
