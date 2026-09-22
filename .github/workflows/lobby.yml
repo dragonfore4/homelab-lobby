@@ -9,7 +9,6 @@ on:
   push:
     branches: [main]
     paths:
-      - "lobby/**"                      # ★ build เฉพาะตอน code เปลี่ยน
       - ".github/workflows/lobby.yml"
   workflow_dispatch: {}                  # กดรันเองได้จากหน้า Actions
 
