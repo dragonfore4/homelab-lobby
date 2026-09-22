@@ -8,8 +8,9 @@ name: build lobby image
 on:
   push:
     branches: [main]
-    paths:
-      - ".github/workflows/lobby.yml"
+    paths-ignore:
+      - "k8s/**"
+      - ".github/workflows/**"
   workflow_dispatch: {}                  # กดรันเองได้จากหน้า Actions
 
 env:
@@ -20,7 +21,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write                    # ★ ต้องมี ไม่งั้น push ขึ้น ghcr ไม่ได้
 
     steps:
@@ -58,3 +59,20 @@ jobs:
 
       - name: image ที่ได้
         run: echo "${{ steps.meta.outputs.tags }}" >> "$GITHUB_STEP_SUMMARY"
+      - name: Update manifest and commit
+        run: |
+          SHORT_SHA="sha-${{ steps.meta.outputs.version }}"
+          
+          # เปลี่ยน tag ใน Deployment (สมมติไฟล์ชื่อ k8s/deployment.yaml)
+          sed -i -E "s|(image: ghcr.io/${{ github.repository_owner }}/lobby:).*|\1${SHORT_SHA}|" k8s/deployment.yaml
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add k8s/deployment.yaml
+          
+          # Commit เฉพาะเมื่อไฟล์มีการเปลี่ยนแปลง
+          if ! git diff --staged --quiet; then
+            git commit -m "chore(k8s): update lobby image to ${SHORT_SHA} [skip ci]"
+            git push origin main
+          fi
