@@ -31,7 +31,7 @@ export default async function Page() {
     <main className="mx-auto w-full max-w-2xl px-6 py-16 sm:px-10 sm:py-24">
       {/* ── หัวเรื่อง: serif คู่กับเลขนับแบบ mono ── */}
       <header className="flex items-baseline justify-between border-b border-hair pb-4">
-        <h1 className="font-display text-2xl text-ink">Services</h1>
+        <h1 className="font-display text-2xl text-ink">Services kub</h1>
         <span className="font-meta text-xs tabular-nums text-ink-soft">
           {links.length}
         </span>
