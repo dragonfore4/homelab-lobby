@@ -49,7 +49,7 @@ jobs:
       - name: build + push
         uses: docker/build-push-action@v6
         with:
-          context: ./lobby              # ★ Dockerfile อยู่ใน lobby/
+          context: ./ # ★ Dockerfile อยู่ใน lobby/
           platforms: linux/amd64        # ★ ตรงกับ node ของคลัสเตอร์
           push: true
           tags: ${{ steps.meta.outputs.tags }}
