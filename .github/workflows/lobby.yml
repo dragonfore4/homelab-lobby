@@ -1,0 +1,61 @@
+name: build lobby image
+
+# ★ ทำไมต้อง build บน GitHub Actions ไม่ build บนเครื่องตัวเอง
+#   1. Mac เครื่องนี้เป็นของบริษัท ★ ไม่มี Docker
+#   2. Mac เป็น arm64 · คลัสเตอร์เป็น amd64 → build บน Mac ต้องใช้ QEMU emulate = ช้ามาก
+#   3. runner ของ GitHub เป็น linux/amd64 อยู่แล้ว → ★ build native ไม่ต้อง emulate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "lobby/**"                      # ★ build เฉพาะตอน code เปลี่ยน
+      - ".github/workflows/lobby.yml"
+  workflow_dispatch: {}                  # กดรันเองได้จากหน้า Actions
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE: ${{ github.repository_owner }}/lobby
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write                    # ★ ต้องมี ไม่งั้น push ขึ้น ghcr ไม่ได้
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: login to ghcr
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          # ★ ไม่ต้องสร้าง PAT — GITHUB_TOKEN ของ workflow พอ
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: tags + labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE }}
+          tags: |
+            type=sha,format=short        # ★ tag ด้วย commit sha — ไม่ใช้ latest
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: build + push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./lobby              # ★ Dockerfile อยู่ใน lobby/
+          platforms: linux/amd64        # ★ ตรงกับ node ของคลัสเตอร์
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha          # cache ข้าม run → build ครั้งถัดไปเร็วขึ้นมาก
+          cache-to: type=gha,mode=max
+
+      - name: image ที่ได้
+        run: echo "${{ steps.meta.outputs.tags }}" >> "$GITHUB_STEP_SUMMARY"

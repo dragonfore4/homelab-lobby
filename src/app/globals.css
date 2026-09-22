@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+/* ★ Tailwind 4 — ตั้งค่าที่นี่ ไม่มี tailwind.config.js อีกแล้ว
+   ทุก --color-X ใน @theme กลายเป็น class  bg-X / text-X / border-X  อัตโนมัติ
+
+   ★ ชื่อ token เป็นเชิงความหมาย (ink / paper / hair) ไม่ใช่ชื่อสี (black / white)
+     → สลับ theme แก้แค่ไฟล์นี้ ไม่ต้องแตะ page.tsx */
+@theme {
+  --color-paper: #191816;      /* ไม่ใช่ดำสนิท — อุ่นเล็กน้อย */
+  --color-ink: #f2f0ea;        /* ↑ จาก #edebe5 — contrast ~15:1 */
+  --color-ink-soft: #b5b1a6;   /* ★ ↑ จาก #9d998f — ~9:1 (เดิม 6.9:1) */
+  --color-ink-faint: #8e8a80;  /* ★ ↑ จาก #6a665e — ~6.3:1 (เดิม 3.5:1 = ต่ำกว่าเกณฑ์) */
+  --color-moss: #7ecfa0;       /* ★ ↑ จาก #63b98a — ~9:1 */
+  --color-hair: #34322d;       /* เส้น ไม่ใช่ตัวอักษร → ไม่ต้องผ่านเกณฑ์ contrast */
+
+  --font-display: ui-serif, Georgia, "Times New Roman", serif;
+  --font-meta: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-meta);
+
+  /* ⚠️ ★ ไม่ใส่ -webkit-font-smoothing: antialiased
+     บน macOS มันทำให้เส้นอักษร "บางลง"
+     พื้นมืด + ตัวอักษรสว่าง มันบางอยู่แล้วโดยธรรมชาติ (halation)
+     → ใส่แล้วยิ่งอ่านยาก · ปล่อยเป็น subpixel-antialiased ตาม default */
+}
+
+/* ★ เส้นประคั่นแถว — ละเอียดกว่า border-dashed ของ Tailwind */
+.hairline-dotted {
+  background-image: radial-gradient(circle, var(--color-hair) 1px, transparent 1px);
+  background-size: 6px 1px;
+  background-repeat: repeat-x;
+  height: 1px;
+}

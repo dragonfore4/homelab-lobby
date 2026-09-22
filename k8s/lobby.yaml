@@ -1,0 +1,117 @@
+# ★ RBAC คือส่วนที่พังบ่อยที่สุด — ไม่มีมัน apiserver ตอบ 403
+#   pod ทุกตัวได้ ServiceAccount `default` ซึ่งอ่านอะไรไม่ได้เลย
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lobby
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: lobby
+  namespace: lobby
+---
+# ★ ต้องเป็น ClusterRole ไม่ใช่ Role — เราอ่าน Ingress ข้าม namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: lobby-ingress-reader
+rules:
+  - apiGroups: ["networking.k8s.io"]   # ★ ไม่ใช่ "" — Ingress ไม่ใช่ core resource
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch"]    # ★ อ่านเท่านั้น
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: lobby-ingress-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: lobby-ingress-reader
+subjects:
+  - kind: ServiceAccount
+    name: lobby
+    namespace: lobby
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lobby
+  namespace: lobby
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lobby
+  template:
+    metadata:
+      labels:
+        app: lobby
+    spec:
+      serviceAccountName: lobby        # ★ ลืมบรรทัดนี้ → ใช้ SA default → 403
+      containers:
+        - name: lobby
+          image: ghcr.io/dragonfore4/lobby:0.1.0
+          ports:
+            - containerPort: 3000
+          # ★ resource requests — บทเรียนจาก incident §17
+          #   ไม่ใส่ = BestEffort = ถูก evict คนแรกตอน disk/RAM ตึง
+          resources:
+            requests:
+              cpu: 20m
+              memory: 96Mi
+            limits:
+              memory: 256Mi            # ★ ไม่ใส่ cpu limit — throttle แล้ว latency กระตุก
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+          livenessProbe:
+            httpGet: { path: /, port: 3000 }
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          readinessProbe:
+            httpGet: { path: /, port: 3000 }
+            initialDelaySeconds: 3
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lobby
+  namespace: lobby
+spec:
+  selector:
+    app: lobby
+  ports:
+    - port: 80
+      targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lobby-ing
+  namespace: lobby
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    dashboard.home/hide: "true"        # ★ ไม่โชว์ตัวเองใน rack
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: home.sirasith.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lobby
+                port:
+                  number: 80
