@@ -61,7 +61,9 @@ jobs:
         run: echo "${{ steps.meta.outputs.tags }}" >> "$GITHUB_STEP_SUMMARY"
       - name: Update manifest and commit
         run: |
-          SHORT_SHA="sha-${{ steps.meta.outputs.version }}"
+          # Keep the manifest tag aligned with docker/metadata-action:
+          # type=sha,format=short produces sha-<7-character commit SHA>.
+          SHORT_SHA="sha-${GITHUB_SHA::7}"
           
           # เปลี่ยน tag ใน Deployment (สมมติไฟล์ชื่อ k8s/lobby.yaml)
           sed -i -E "s|(image: ghcr.io/${{ github.repository_owner }}/lobby:).*|\1${SHORT_SHA}|" k8s/lobby.yaml
