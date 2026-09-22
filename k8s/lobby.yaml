@@ -102,6 +102,10 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     dashboard.home/hide: "true"        # ★ ไม่โชว์ตัวเองใน rack
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Lobby
+    gethomepage.dev/group: Applications
+    gethomepage.dev/icon: mdi-home
 spec:
   ingressClassName: traefik
   rules:
